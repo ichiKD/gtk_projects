@@ -1,47 +1,37 @@
 BasedOnStyle: LLVM
+ColumnLimit: 400
 
-# Line length similar to your code
-ColumnLimit: 128
-
-# KEEP function arguments on one line
 BinPackArguments: true
 BinPackParameters: true
 AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 
-# Strongly discourage breaking calls
-PenaltyBreakBeforeFirstCallParameter: 1000000
-PenaltyBreakOpenParenthesis: 1000000
-PenaltyBreakAssignment: 1000000
-PenaltyBreakString: 1000000
-PenaltyExcessCharacter: 1000000
+AlignAfterOpenBracket: DontAlign
+ContinuationIndentWidth: 0
 
-# Brace style matches GTK
+PenaltyBreakBeforeFirstCallParameter: 1000000000
+PenaltyBreakOpenParenthesis: 1000000000
+PenaltyBreakAssignment: 1000000000
+PenaltyBreakString: 1000000000
+PenaltyExcessCharacter: 1000000000
+
 BreakBeforeBraces: Attach
-
-# Pointer style: char *name
 PointerAlignment: Right
 
-# Indentation
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
 
-# Compact code blocks
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortBlocksOnASingleLine: Empty
-AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: All
+AllowShortBlocksOnASingleLine: Always
 AllowShortIfStatementsOnASingleLine: Never
-
-# Alignment
-AlignAfterOpenBracket: Align
-AlignOperands: Align
-
-# Includes
+AllowShortEnumsOnASingleLine: false
 SortIncludes: false
-
-# Spaces
 SpaceBeforeParens: ControlStatements
-
-# Prevent unwanted wrapping
 AlwaysBreakTemplateDeclarations: No
+
+# REMOVE blank lines
+MaxEmptyLinesToKeep: 0
+KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLinesAtEOF: false
+SeparateDefinitionBlocks: Never
