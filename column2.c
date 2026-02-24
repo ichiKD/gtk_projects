@@ -44,6 +44,14 @@ struct _User {
     int department;
 };
 G_DEFINE_TYPE(User, user, G_TYPE_OBJECT)
+static GtkEntry *entry_username;
+static GtkEntry *entry_first;
+static GtkEntry *entry_last;
+static GtkEntry *entry_email;
+static GtkEntry *entry_password;
+static GtkDropDown *entry_dept;
+static GtkSingleSelection *single_selection;
+static User *selected_user = NULL;
 /* =========================
    Properties
    ========================= */
@@ -161,6 +169,20 @@ static void bind_dept(GtkSignalListItemFactory *factory, GtkListItem *list_item,
     User *user = gtk_list_item_get_item(list_item);
     gtk_label_set_text(label, dept_to_string(user->department));
 }
+static void on_selection_changed(GtkSingleSelection *sel, GParamSpec *pspec, gpointer data) {
+    selected_user = g_list_model_get_item(G_LIST_MODEL(sel), gtk_single_selection_get_selected(sel));
+    if (!selected_user) return;
+    gtk_editable_set_text(GTK_EDITABLE(entry_username), selected_user->username);
+    gtk_editable_set_text(GTK_EDITABLE(entry_first), selected_user->first);
+    gtk_editable_set_text(GTK_EDITABLE(entry_last), selected_user->last);
+    gtk_editable_set_text(GTK_EDITABLE(entry_email), selected_user->email);
+    gtk_editable_set_text(GTK_EDITABLE(entry_password), selected_user->password);
+    gtk_drop_down_set_selected(entry_dept, selected_user->department);
+}
+static void on_update_clicked(GtkButton *btn, gpointer data) {
+    if (!selected_user) return;
+    g_object_set(selected_user, "username", gtk_editable_get_text(GTK_EDITABLE(entry_username)), "first", gtk_editable_get_text(GTK_EDITABLE(entry_first)), "last", gtk_editable_get_text(GTK_EDITABLE(entry_last)), "email", gtk_editable_get_text(GTK_EDITABLE(entry_email)), "password", gtk_editable_get_text(GTK_EDITABLE(entry_password)), "department", gtk_drop_down_get_selected(entry_dept), NULL);
+}
 /* =========================
    Activate
    ========================= */
@@ -168,11 +190,15 @@ static void activate(GtkApplication *app) {
     /* Create users */
     User *u1 = g_object_new(TYPE_USER, "username", "jsmith", "first", "John", "last", "Smith", "email", "john@gmail.com", "password", "1234", "department", DEPT_SALES, NULL);
     User *u2 = g_object_new(TYPE_USER, "username", "adoe", "first", "Alice", "last", "Doe", "email", "alice@gmail.com", "password", "1234", "department", DEPT_ACCT, NULL);
+    User *u3 = g_object_new(TYPE_USER, "username", "bwayne", "first", "Bruce", "last", "Wayne", "email", "bruce@gmail.com", "password", "1234", "department", DEPT_SHIPPING, NULL);
     /* Store */
     GListStore *store = g_list_store_new(TYPE_USER);
     g_list_store_append(store, u1);
     g_list_store_append(store, u2);
-    GtkSelectionModel *selection = GTK_SELECTION_MODEL(gtk_single_selection_new(G_LIST_MODEL(store)));
+    g_list_store_append(store, u3);
+    single_selection = gtk_single_selection_new(G_LIST_MODEL(store));
+    g_signal_connect(single_selection, "notify::selected", G_CALLBACK(on_selection_changed), NULL);
+    GtkSelectionModel *selection = GTK_SELECTION_MODEL(single_selection);
     GtkWidget *view = gtk_column_view_new(selection);
     /* Username column */
     GtkListItemFactory *f1 = gtk_signal_list_item_factory_new();
@@ -199,20 +225,39 @@ static void activate(GtkApplication *app) {
     g_signal_connect(f5, "setup", G_CALLBACK(setup), NULL);
     g_signal_connect(f5, "bind", G_CALLBACK(bind_dept), NULL);
     gtk_column_view_append_column(GTK_COLUMN_VIEW(view), gtk_column_view_column_new("Department", f5));
+    /**/
+    entry_username = GTK_ENTRY(gtk_entry_new());
+    entry_first = GTK_ENTRY(gtk_entry_new());
+    entry_last = GTK_ENTRY(gtk_entry_new());
+    entry_email = GTK_ENTRY(gtk_entry_new());
+    entry_password = GTK_ENTRY(gtk_entry_new());
+    entry_dept = GTK_DROP_DOWN(gtk_drop_down_new_from_strings((const char *[]){"--NONE_SELECTED--", "Accounting", "Sales", "Plant", "Shipping", "Quality Control", NULL}));
+    GtkWidget *update_btn = gtk_button_new_with_label("Update");
+    g_signal_connect(update_btn, "clicked", G_CALLBACK(on_update_clicked), NULL);
+    /* layout */
+    GtkWidget *form = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_box_append(GTK_BOX(form), GTK_WIDGET(entry_username));
+    gtk_box_append(GTK_BOX(form), GTK_WIDGET(entry_first));
+    gtk_box_append(GTK_BOX(form), GTK_WIDGET(entry_last));
+    gtk_box_append(GTK_BOX(form), GTK_WIDGET(entry_email));
+    gtk_box_append(GTK_BOX(form), GTK_WIDGET(entry_password));
+    gtk_box_append(GTK_BOX(form), GTK_WIDGET(entry_dept));
+    gtk_box_append(GTK_BOX(form), update_btn);
+    /* main layout */
+    GtkWidget *mainbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_box_append(GTK_BOX(mainbox), view);
+    gtk_box_append(GTK_BOX(mainbox), form);
     /* Window */
     GtkWidget *window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "User Admin");
     gtk_window_set_default_size(GTK_WINDOW(window), 700, 400);
-    gtk_window_set_child(GTK_WINDOW(window), view);
+    gtk_window_set_child(GTK_WINDOW(window), mainbox);
     gtk_window_present(GTK_WINDOW(window));
 }
 /* =========================
    Main
    ========================= */
 int main(int argc, char **argv) {
-    int a = 1;
-    if (a == 1)
-        printf("rsat");
     GtkApplication *app = gtk_application_new("example.useradmin", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
     int status = g_application_run(G_APPLICATION(app), argc, argv);

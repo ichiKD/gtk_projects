@@ -24,7 +24,7 @@ UseTab: Never
 
 AllowShortFunctionsOnASingleLine: All
 AllowShortBlocksOnASingleLine: Always
-AllowShortIfStatementsOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: Always
 AllowShortEnumsOnASingleLine: false
 SortIncludes: false
 SpaceBeforeParens: ControlStatements
