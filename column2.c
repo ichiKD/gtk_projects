@@ -147,27 +147,42 @@ static void setup(GtkSignalListItemFactory *factory, GtkListItem *list_item, gpo
 static void bind_username(GtkSignalListItemFactory *factory, GtkListItem *list_item, gpointer data) {
     GtkLabel *label = GTK_LABEL(gtk_list_item_get_child(list_item));
     User *user = gtk_list_item_get_item(list_item);
-    gtk_label_set_text(label, user->username);
+    GBinding *binding = g_object_bind_property(user, "username", label, "label", G_BINDING_SYNC_CREATE);
+    g_object_set_data_full(G_OBJECT(label), "binding", binding, g_object_unref);
 }
 static void bind_first(GtkSignalListItemFactory *factory, GtkListItem *list_item, gpointer data) {
     GtkLabel *label = GTK_LABEL(gtk_list_item_get_child(list_item));
     User *user = gtk_list_item_get_item(list_item);
-    gtk_label_set_text(label, user->first);
+    GBinding *binding = g_object_bind_property(user, "first", label, "label", G_BINDING_SYNC_CREATE);
+    g_object_set_data_full(G_OBJECT(label), "binding", binding, g_object_unref);
 }
 static void bind_last(GtkSignalListItemFactory *factory, GtkListItem *list_item, gpointer data) {
     GtkLabel *label = GTK_LABEL(gtk_list_item_get_child(list_item));
     User *user = gtk_list_item_get_item(list_item);
-    gtk_label_set_text(label, user->last);
+    GBinding *binding = g_object_bind_property(user, "last", label, "label", G_BINDING_SYNC_CREATE);
+    g_object_set_data_full(G_OBJECT(label), "binding", binding, g_object_unref);
 }
 static void bind_email(GtkSignalListItemFactory *factory, GtkListItem *list_item, gpointer data) {
     GtkLabel *label = GTK_LABEL(gtk_list_item_get_child(list_item));
     User *user = gtk_list_item_get_item(list_item);
-    gtk_label_set_text(label, user->email);
+    GBinding *binding = g_object_bind_property(user, "email", label, "label", G_BINDING_SYNC_CREATE);
+    g_object_set_data_full(G_OBJECT(label), "binding", binding, g_object_unref);
 }
+/* Department cannot bind directly (needs conversion) */
 static void bind_dept(GtkSignalListItemFactory *factory, GtkListItem *list_item, gpointer data) {
     GtkLabel *label = GTK_LABEL(gtk_list_item_get_child(list_item));
     User *user = gtk_list_item_get_item(list_item);
     gtk_label_set_text(label, dept_to_string(user->department));
+}
+/* =========================
+   Unbind functions
+   ========================= */
+static void unbind_all(GtkSignalListItemFactory *factory, GtkListItem *list_item, gpointer data) {
+    GtkWidget *child = gtk_list_item_get_child(list_item);
+    if (!child) return;
+    /* DO NOTHING */
+    /* binding will be unref automatically
+       by g_object_set_data_full */
 }
 static void on_selection_changed(GtkSingleSelection *sel, GParamSpec *pspec, gpointer data) {
     selected_user = g_list_model_get_item(G_LIST_MODEL(sel), gtk_single_selection_get_selected(sel));
@@ -204,26 +219,31 @@ static void activate(GtkApplication *app) {
     GtkListItemFactory *f1 = gtk_signal_list_item_factory_new();
     g_signal_connect(f1, "setup", G_CALLBACK(setup), NULL);
     g_signal_connect(f1, "bind", G_CALLBACK(bind_username), NULL);
+    g_signal_connect(f1, "unbind", G_CALLBACK(unbind_all), NULL);
     gtk_column_view_append_column(GTK_COLUMN_VIEW(view), gtk_column_view_column_new("Username", f1));
     /* First */
     GtkListItemFactory *f2 = gtk_signal_list_item_factory_new();
     g_signal_connect(f2, "setup", G_CALLBACK(setup), NULL);
     g_signal_connect(f2, "bind", G_CALLBACK(bind_first), NULL);
+    g_signal_connect(f2, "unbind", G_CALLBACK(unbind_all), NULL);
     gtk_column_view_append_column(GTK_COLUMN_VIEW(view), gtk_column_view_column_new("First", f2));
     /* Last */
     GtkListItemFactory *f3 = gtk_signal_list_item_factory_new();
     g_signal_connect(f3, "setup", G_CALLBACK(setup), NULL);
     g_signal_connect(f3, "bind", G_CALLBACK(bind_last), NULL);
+    g_signal_connect(f3, "unbind", G_CALLBACK(unbind_all), NULL);
     gtk_column_view_append_column(GTK_COLUMN_VIEW(view), gtk_column_view_column_new("Last", f3));
     /* Email */
     GtkListItemFactory *f4 = gtk_signal_list_item_factory_new();
     g_signal_connect(f4, "setup", G_CALLBACK(setup), NULL);
     g_signal_connect(f4, "bind", G_CALLBACK(bind_email), NULL);
+    g_signal_connect(f4, "unbind", G_CALLBACK(unbind_all), NULL);
     gtk_column_view_append_column(GTK_COLUMN_VIEW(view), gtk_column_view_column_new("Email", f4));
     /* Department */
     GtkListItemFactory *f5 = gtk_signal_list_item_factory_new();
     g_signal_connect(f5, "setup", G_CALLBACK(setup), NULL);
     g_signal_connect(f5, "bind", G_CALLBACK(bind_dept), NULL);
+    g_signal_connect(f5, "unbind", G_CALLBACK(unbind_all), NULL);
     gtk_column_view_append_column(GTK_COLUMN_VIEW(view), gtk_column_view_column_new("Department", f5));
     /**/
     entry_username = GTK_ENTRY(gtk_entry_new());
