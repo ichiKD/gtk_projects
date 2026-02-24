@@ -1,9 +1,15 @@
 {
   "configurations": [
     {
-      "name": "WSL",
+      "name": "windows-gcc-x64",
       "compileCommands": "${workspaceFolder}/compile_commands.json",
-      "intelliSenseMode": "linux-gcc-x64"
+      "intelliSenseMode": "windows-gcc-x64",
+      "includePath": [
+        "${workspaceFolder}/**"
+      ],
+      "cStandard": "${default}",
+      "cppStandard": "${default}",
+      "compilerPath": "C:/Programs/gcc14-64-winlibs/bin/gcc.exe"
     }
   ],
   "version": 4
